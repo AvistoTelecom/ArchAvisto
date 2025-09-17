@@ -5,10 +5,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-env:
-  PACKAGE_FILE: "bootscript"
-  PACKAGE_CHECKSUM: "bootscript.sha256"
-
 jobs:
   precommit:
     name: Pre-commit checks
