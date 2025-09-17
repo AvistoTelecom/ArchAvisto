@@ -13,6 +13,7 @@ export ARCHAVISTO_VERSION="2.1.5"
 OWNER="AvistoTelecom"
 REPO="ArchAvisto"
 ASSET_NAME="bootscript"
+ASSET_FILE="/opt/startup/$ASSET_NAME"
 RELEASE="${RELEASE:-latest}"   # "latest" or a tag name like 1.1.3
 
 set -e
@@ -69,11 +70,11 @@ asset_url="https://api.github.com/repos/$OWNER/$REPO/releases/assets/$asset_id"
 
 curl --fail -s -L \
 	-H "Accept: application/octet-stream" \
-	-o "/opt/startup/$ASSET_NAME" \
+	-o "$ASSET_FILE" \
 	"$asset_url"
 
 # 5. Compute local SHA256
-downloaded_sha=$(sha256sum "$ASSET_NAME" | awk '{print $1}')
+downloaded_sha=$(sha256sum "$ASSET_FILE" | awk '{print $1}')
 
 if [ "$expected_sha" != "$downloaded_sha" ]; then
 	printf "${BOLDRED}[ERROR] checksum mismatch for asset '$ASSET_NAME'${ENDCOLOR}\n"
@@ -82,11 +83,11 @@ fi
 
 printf "${BOLDGREEN}Binary integrity verified successfully${ENDCOLOR}\n"
 
-wait_unlock "/opt/startup/$ASSET_NAME"
-chmod +x /opt/startup/$ASSET_NAME
-wait_unlock "/opt/startup/$ASSET_NAME"
+wait_unlock $ASSET_FILE
+chmod +x $ASSET_FILE
+wait_unlock $ASSET_FILE
 
-/opt/startup/$ASSET_NAME
+$ASSET_FILE
 /opt/startup/script.sh
 sudo sed -i "s/^PRETTY_NAME=.*/PRETTY_NAME=\"Arch Avisto v${ARCHAVISTO_VERSION}\"/" /etc/os-release
 
