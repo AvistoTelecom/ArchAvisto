@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+. /opt/startup/utils
+
+set -e
+trap handle_error ERR
+
+handle_error() {
+	printf "${BOLDRED}[ERROR] Something went wrong! Exiting... ${ENDCOLOR}\n"
+	printf "${BOLDGREEN}Fill in a ticket on https://support.advans-group.com or contact maintainers on Teams.${ENDCOLOR}\n"
+	sudo rm -f $ASSET_FILE /opt/startup/script.sh
+	exit 1
+}
+
+. /opt/startup/fetch-bootscript
+
+chmod +x $ASSET_FILE
+$ASSET_FILE
+/opt/startup/script.sh
+sudo sed -i "s/^PRETTY_NAME=.*/PRETTY_NAME=\"Arch Avisto v${ARCHAVISTO_VERSION}\"/" /etc/os-release
+
+printf "${BOLDGREEN}Installation complete${ENDCOLOR}\n"
+printf "${BOLDORANGE}[WARNING] Now you must restart WSL using the commands ${BOLDRED}wsl -t <distro-name> ${BOLDORANGE}and then ${BOLDRED}wsl -d <distro-name>${ENDCOLOR}"

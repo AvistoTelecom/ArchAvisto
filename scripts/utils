@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# Script variables
+export BOLDRED="\e[1;31m"
+export BOLDGREEN="\e[1;32m"
+export BOLDCYAN="\e[38;2;95;135;255m"
+export BOLDMAGENTA="\e[1;35m"
+export BOLDRED="\e[1;31m"
+export BOLDORANGE="\e[1;38;2;255;165;0m"
+export ENDCOLOR="\e[0m"
+export ARCHAVISTO_VERSION="2.1.5"
+# GitHub variables
+export OWNER="AvistoTelecom"
+export REPO="ArchAvisto"
+export ASSET_NAME="bootscript"
+export ASSET_FILE="/opt/startup/$ASSET_NAME"
+export RELEASE="${RELEASE:-latest}"   # "latest" or a tag name like 1.1.3
