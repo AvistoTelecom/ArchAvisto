@@ -9,17 +9,16 @@ import (
 )
 
 const (
-	oldUsername        = "arch"
-	loginUsername      = "login"
-	skipFilename       = "/opt/startup/skip_bootscript"
-	bootscriptVersion  = "1.1.2"
-	scriptFilename     = "/opt/startup/script.sh"
-	testAddress        = "https://google.com"
-	versionEnvKey      = "ARCHAVISTO_VERSION"
-	maintainers        = "Yann Lacroix <yann.lacroix@avisto.com>, Mathis Guilbaud <mathis.guilbaud@avisto.com>"
-	privateTokenEnvKey = "GITLAB_TOKEN"
-	fileUrl            = "https://versioning.advans-group.com/api/v4/projects/1495/repository/files/packages.json?ref=main"
-	scriptTemplate     = `
+	oldUsername       = "arch"
+	loginUsername     = "login"
+	skipFilename      = "/opt/startup/skip_bootscript"
+	bootscriptVersion = "1.1.3"
+	scriptFilename    = "/opt/startup/script.sh"
+	testAddress       = "https://google.com"
+	versionEnvKey     = "ARCHAVISTO_VERSION"
+	maintainers       = "Yann Lacroix <yann.lacroix@avisto.com>"
+	fileUrl           = "https://raw.githubusercontent.com/AvistoTelecom/ArchAvisto/refs/heads/main/packages.json"
+	scriptTemplate    = `
 #!/usr/bin/sh
 set -o errexit
 # Bootscript version: {{ .BootscriptVersion }}
@@ -96,15 +95,9 @@ func main() {
 	// Ask for the new username
 	newUsername := userNamePrompt(oldUsername)
 
-	// Fetching and parsing json file
-	privateToken := os.Getenv(privateTokenEnvKey)
-	if privateToken == "" {
-		color.Red("Missing the GITLAB_TOKEN environment variable, cannot fetch the packages json file. Exiting...")
-		os.Exit(1)
-	}
-	content, err := fetchJsonFiles(fileUrl, privateToken)
+	content, err := fetchJsonFiles(fileUrl)
 	if err != nil {
-		color.Red("Error while fetching the packages json file, it may be an internal Gitlab issue, please contact a DevOps internal member or IT for support: %s", err)
+		color.Red("Error while fetching the packages json file: %s", err)
 		os.Exit(1)
 	}
 	jsonData, err := parseJsonFile(content)

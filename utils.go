@@ -63,20 +63,19 @@ func userNamePrompt(defaultUsername string) string {
 	return name
 }
 
-func fetchJsonFiles(url string, privateToken string) (string, error) {
+func fetchJsonFiles(url string) (string, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", err
 	}
 
-	req.Header.Add("Private-Token", privateToken)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	} else if resp.StatusCode != 200 {
 		color.Red("Failed to fetch packages json file: %s", resp.Status)
-		return "", errors.New("Failed to fetch packages json file")
+		return "", errors.New("failed to fetch packages json file")
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
