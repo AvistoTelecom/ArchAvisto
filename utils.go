@@ -1,9 +1,8 @@
 package main
 
 import (
-	"encoding/base64"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -64,36 +63,22 @@ func userNamePrompt(defaultUsername string) string {
 }
 
 func fetchJsonFiles(url string) (string, error) {
-	req, err := http.NewRequest("GET", url, nil)
+	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
-	} else if resp.StatusCode != 200 {
-		color.Red("Failed to fetch packages json file: %s", resp.Status)
-		return "", errors.New("failed to fetch packages json file")
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("failed to fetch JSON file: %s", resp.Status)
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
 
-	var fileresp FileResponse
-	error := json.Unmarshal(body, &fileresp)
-	if error != nil {
-		return "", err
-	}
-	// Decoding file content
-	fileContent, err := base64.StdEncoding.DecodeString(fileresp.Content)
-	if err != nil {
-		return "", err
-	}
-	return string(fileContent), nil
+	return string(body), nil
 }
 
 func parseJsonFile(jsonFile string) (jsonData, error) {
