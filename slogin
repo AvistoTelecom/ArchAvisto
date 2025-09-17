@@ -14,6 +14,7 @@ OWNER="AvistoTelecom"
 REPO="ArchAvisto"
 ASSET_NAME="bootscript"
 ASSET_FILE="/opt/startup/$ASSET_NAME"
+ASSET_FILE_TMP="$ASSET_FILE.tmp"
 RELEASE="${RELEASE:-latest}"   # "latest" or a tag name like 1.1.3
 
 set -e
@@ -22,15 +23,8 @@ trap handle_error ERR
 handle_error() {
 	printf "${BOLDRED}[ERROR] Something went wrong! Exiting... ${ENDCOLOR}\n"
 	printf "${BOLDGREEN}Fill in a ticket on https://support.advans-group.com or contact maintainers on Teams.${ENDCOLOR}\n"
-	sudo rm -f /opt/startup/bootscript /opt/startup/script.sh
+	sudo rm -f $ASSET_FILE $ASSET_FILE_TMP /opt/startup/script.sh
 	exit 1
-}
-
-wait_unlock() {
-	# waiting for the file descriptor to be freed
-	while lsof $1 >/dev/null 2>&1; do
-		sleep 0.1
-	done
 }
 
 # Download and verify the 'bootscript' asset from the latest release of ArchAvisto
@@ -50,7 +44,7 @@ asset_json=$(echo "$release_json" | jq -r ".assets[] | select(.name == \"$ASSET_
 
 if [ -z "$asset_json" ] || [ "$asset_json" = "null" ]; then
 	printf "${BOLDRED}[ERROR] could not find asset '$ASSET_NAME' GitHub '$RELEASE' release for ArchAvisto${ENDCOLOR}\n"
-	exit 1
+	handle_error
 fi
 
 asset_id=$(echo "$asset_json" | jq -r ".id")
@@ -59,7 +53,7 @@ digest_full=$(echo "$asset_json" | jq -r ".digest")
 
 if [ -z "$digest_full" ] || [ "$digest_full" = "null" ]; then
 	printf "${BOLDRED}[ERROR] no digest found in metadata for asset '$ASSET_NAME'${ENDCOLOR}\n"
-	exit 1
+	handle_error
 fi
 
 # Strip off "sha256:" prefix
@@ -70,23 +64,21 @@ asset_url="https://api.github.com/repos/$OWNER/$REPO/releases/assets/$asset_id"
 
 curl --fail -s -L \
 	-H "Accept: application/octet-stream" \
-	-o "$ASSET_FILE" \
+	-o "$ASSET_FILE_TMP" \
 	"$asset_url"
 
 # 5. Compute local SHA256
-downloaded_sha=$(sha256sum "$ASSET_FILE" | awk '{print $1}')
+downloaded_sha=$(sha256sum "$ASSET_FILE_TMP" | awk '{print $1}')
 
 if [ "$expected_sha" != "$downloaded_sha" ]; then
 	printf "${BOLDRED}[ERROR] checksum mismatch for asset '$ASSET_NAME'${ENDCOLOR}\n"
-	exit 1
+	handle_error
 fi
 
 printf "${BOLDGREEN}Binary integrity verified successfully${ENDCOLOR}\n"
 
-wait_unlock $ASSET_FILE
-chmod +x $ASSET_FILE
-wait_unlock $ASSET_FILE
-
+chmod +x $ASSET_FILE_TMP
+mv $ASSET_FILE_TMP $ASSET_FILE
 $ASSET_FILE
 /opt/startup/script.sh
 sudo sed -i "s/^PRETTY_NAME=.*/PRETTY_NAME=\"Arch Avisto v${ARCHAVISTO_VERSION}\"/" /etc/os-release
